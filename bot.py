@@ -1,19 +1,30 @@
+import os
 import logging
+import threading
+from flask import Flask
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
-# ===== НАСТРОЙКИ =====
-TOKEN = "8472514417:AAG_tmO8srO82vphIO-5DtdGAVPcsnWMJYM"  # ⚠️ ЗАМЕНИ ПОТОМ НАСТРОЙКОЙ В RENDER
-SITE_URL = "https://nikitaioneofff-web.github.io/"  # ⚠️ ЗАМЕНИ
-# =====================
+# ===== НАСТРОЙКИ ИЗ ПЕРЕМЕННЫХ СРЕДЫ =====
+TOKEN = os.environ.get('BOT_TOKEN')
+SITE_URL = os.environ.get('SITE_URL')
 
+# Проверка, что переменные загрузились
+if not TOKEN:
+    print("ОШИБКА: BOT_TOKEN не найден в переменных окружения!")
+if not SITE_URL:
+    print("ОШИБКА: SITE_URL не найден в переменных окружения!")
+
+# ===== НАСТРОЙКА ЛОГИРОВАНИЯ =====
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
+# ===== КОМАНДЫ БОТА =====
 def start(update: Update, context: CallbackContext):
+    """Отправляет приветствие с кнопкой"""
     keyboard = [[InlineKeyboardButton("🎨 Открыть конвертер", url=SITE_URL)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -36,6 +47,7 @@ def start(update: Update, context: CallbackContext):
     )
 
 def help_command(update: Update, context: CallbackContext):
+    """Отправляет помощь"""
     keyboard = [[InlineKeyboardButton("🎨 Открыть конвертер", url=SITE_URL)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -54,7 +66,24 @@ def help_command(update: Update, context: CallbackContext):
         reply_markup=reply_markup
     )
 
+# ===== ПРОСТОЙ ВЕБ-СЕРВЕР ДЛЯ RENDER =====
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Бот работает! ✅"
+
+def run_http_server():
+    """Запускает Flask-сервер на порту 10000."""
+    app.run(host='0.0.0.0', port=10000, debug=False, use_reloader=False)
+
+# ===== ЗАПУСК БОТА =====
 def main():
+    # Запускаем HTTP-сервер в отдельном потоке (для Render)
+    threading.Thread(target=run_http_server, daemon=True).start()
+    logger.info("🌐 HTTP-сервер запущен на порту 10000")
+
+    # Запускаем бота
     updater = Updater(TOKEN, use_context=True)
     dp = updater.dispatcher
     
