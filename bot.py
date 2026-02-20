@@ -5,8 +5,7 @@ import signal
 import time
 from flask import Flask
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
-
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 # ===== НАСТРОЙКИ ИЗ ПЕРЕМЕННЫХ СРЕДЫ =====
 TOKEN = os.environ.get('BOT_TOKEN')
 SITE_URL = os.environ.get('SITE_URL')
